@@ -9,12 +9,15 @@ version := "0.2"
 libraryDependencies += "org.scala-sbt" % "test-interface" % "1.0"
 
 // standard stuff follows:
-scalaVersion := "2.11.0-M4"
+scalaVersion := "2.11.0-M6"
 
 // NOTE: not necessarily equal to scalaVersion
 // (e.g., during PR validation, we override scalaVersion to validate,
 // but don't rebuild scalacheck, so we don't want to rewire that dependency)
-scalaBinaryVersion := "2.11.0-M4"
+scalaBinaryVersion := "2.11.0-M6"
+
+// to allow compiling against snapshot versions of Scala
+resolvers += Resolver.sonatypeRepo("snapshots")
 
 // don't use for doc scope, scaladoc warnings are not to be reckoned with
 scalacOptions in compile ++= Seq("-optimize", "-Xfatal-warnings", "-feature", "-deprecation", "-unchecked", "-Xlint")
