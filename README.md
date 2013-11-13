@@ -1,4 +1,4 @@
-scala-partest-interface
+scala-partest-interface [<img src="https://api.travis-ci.org/scala/scala-partest-interface.png"/>](https://travis-ci.org/scala/scala-partest-interface)
 =======================
 
 SBT interface to partest
