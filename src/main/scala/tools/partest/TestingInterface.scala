@@ -49,7 +49,7 @@ case class Runner(args: Array[String], remoteArgs: Array[String], testClassLoade
    *  @return an array of <code>Task</code>s
    *  @throws IllegalStateException if invoked after <code>done</code> has been invoked.
    */
-  def tasks(taskDefs: Array[TaskDef]): Array[sbt.testing.Task] = taskDefs map (PartestTask(_): sbt.testing.Task)
+  def tasks(taskDefs: Array[TaskDef]): Array[sbt.testing.Task] = taskDefs map (SbtPartestTask(_): sbt.testing.Task)
 
   /** Indicates the client is done with this <code>Runner</code> instance.
    *
@@ -62,7 +62,7 @@ case class Runner(args: Array[String], remoteArgs: Array[String], testClassLoade
  *
  * TODO: make configurable
  */
-case class PartestTask(taskDef: TaskDef) extends Task {
+case class SbtPartestTask(taskDef: TaskDef) extends Task {
   /** Executes this task, possibly returning to the client new tasks to execute. */
   def execute(eventHandler: EventHandler, loggers: Array[Logger]): Array[Task] = {
     val forkedCp    = scala.util.Properties.javaClassPath
