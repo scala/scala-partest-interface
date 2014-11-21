@@ -8,11 +8,11 @@ add something like this to your `build.sbt`:
 
 ```
 // for testing with partest
-libraryDependencies += "org.scala-lang.modules" %% "scala-partest-interface" % "0.2" % "test"
+libraryDependencies += "org.scala-lang.modules" %% "scala-partest-interface" % "0.4" % "test"
 
 // the actual partest the interface calls into -- must be binary version close enough to ours
 // so that it can link to the compiler/lib we're using (testing)
-libraryDependencies += "org.scala-lang.modules" %% "scala-partest" % "1.0-RC2" % "test"
+libraryDependencies += "org.scala-lang.modules" %% "scala-partest" % "1.0.1" % "test"
 
 fork in Test := true
 
