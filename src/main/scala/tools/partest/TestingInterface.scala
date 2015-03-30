@@ -20,6 +20,8 @@ class Framework extends sbt.testing.Framework {
   def fingerprints: Array[Fingerprint] = Array(Framework.fingerprint)
   def name: String = "partest"
 
+  def enumerateTests: Array[String] = Array("scalacheck", "instrumented", "pos", "neg", "run", "jvm", "res", "scalap", "specialized", "presentation")
+
   def runner(args: Array[String], remoteArgs: Array[String], testClassLoader: ClassLoader): sbt.testing.Runner =
     new Runner(args, remoteArgs, testClassLoader)
 }
@@ -72,7 +74,7 @@ case class SbtPartestTask(taskDef: TaskDef) extends Task {
     if (Runtime.getRuntime().maxMemory() / (1024*1024) < 800)
       loggers foreach (_.warn(s"""Low heap size detected (~ ${Runtime.getRuntime().maxMemory() / (1024*1024)}M). Please add the following to your build.sbt: javaOptions in Test += "-Xmx1G""""))
 
-    try runner execute Array("scalacheck", "instrumented", "pos", "neg", "run", "jvm", "res", "scalap", "specialized", "presentation")
+    try runner execute Array(taskDef.fullyQualifiedName)
     catch {
       case ex: ClassNotFoundException =>
         loggers foreach { l => l.error("Please make sure partest is running in a forked VM by including the following line in build.sbt:\nfork in Test := true") }
