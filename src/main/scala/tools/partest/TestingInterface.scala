@@ -27,29 +27,8 @@ class Framework extends sbt.testing.Framework {
 /** Represents one run of a suite of tests.
  */
 case class Runner(args: Array[String], remoteArgs: Array[String], testClassLoader: ClassLoader) extends sbt.testing.Runner {
-  /** Returns an array of tasks that when executed will run tests and suites determined by the
-   *  passed <code>TaskDef</code>s.
-   *
-   *  <p>
-   *  Each returned task, when executed, will run tests and suites determined by the
-   *  test class name, fingerprints, "explicitly specified" field, and selectors of one of the passed <code>TaskDef</code>s.
-   *  </p>
-   *
-   *  <p>
-   *  This <code>tasks</code> method may be called with <code>TaskDef</code>s containing the same value for <code>testClassName</code> but
-   *  different fingerprints. For example, if both a class and its companion object were test classes, the <code>tasks</code> method could be
-   *  passed an array containing <code>TaskDef</code>s with the same name but with a different value for <code>fingerprint.isModule</code>.
-   *  </p>
-   *
-   *  <p>
-   *  A test framework may "reject" a requested task by returning no <code>Task</code> for that <code>TaskDef</code>.
-   *  </p>
-   *
-   *  @param taskDefs the <code>TaskDef</code>s for requested tasks
-   *  @return an array of <code>Task</code>s
-   *  @throws IllegalStateException if invoked after <code>done</code> has been invoked.
-   */
-  def tasks(taskDefs: Array[TaskDef]): Array[sbt.testing.Task] = taskDefs map (SbtPartestTask(_): sbt.testing.Task)
+
+  def tasks(taskDefs: Array[TaskDef]): Array[sbt.testing.Task] = taskDefs map (SbtPartestTask(_, args): sbt.testing.Task)
 
   /** Indicates the client is done with this <code>Runner</code> instance.
    *
@@ -59,20 +38,18 @@ case class Runner(args: Array[String], remoteArgs: Array[String], testClassLoade
 }
 
 /** Run partest in this VM. Assumes we're running in a forked VM!
- *
- * TODO: make configurable
  */
-case class SbtPartestTask(taskDef: TaskDef) extends Task {
+case class SbtPartestTask(taskDef: TaskDef, args: Array[String]) extends Task {
   /** Executes this task, possibly returning to the client new tasks to execute. */
   def execute(eventHandler: EventHandler, loggers: Array[Logger]): Array[Task] = {
     val forkedCp    = scala.util.Properties.javaClassPath
     val classLoader = new URLClassLoader(forkedCp.split(java.io.File.pathSeparator).map(new File(_).toURI.toURL))
-    val runner      = SBTRunner(Framework.fingerprint, eventHandler, loggers, "files", classLoader, null, null, Array.empty[String])
+    val runner      = SBTRunner(Framework.fingerprint, eventHandler, loggers, "files", classLoader, null, null, Array.empty[String], args)
 
     if (Runtime.getRuntime().maxMemory() / (1024*1024) < 800)
       loggers foreach (_.warn(s"""Low heap size detected (~ ${Runtime.getRuntime().maxMemory() / (1024*1024)}M). Please add the following to your build.sbt: javaOptions in Test += "-Xmx1G""""))
 
-    try runner execute Array("scalacheck", "instrumented", "pos", "neg", "run", "jvm", "res", "scalap", "specialized", "presentation")
+    try runner run
     catch {
       case ex: ClassNotFoundException =>
         loggers foreach { l => l.error("Please make sure partest is running in a forked VM by including the following line in build.sbt:\nfork in Test := true") }
@@ -82,13 +59,13 @@ case class SbtPartestTask(taskDef: TaskDef) extends Task {
     Array()
   }
 
-  type SBTRunner = { def execute(kinds: Array[String]): String }
+  type SBTRunner = { def run(): Unit }
 
   // use reflection to instantiate scala.tools.partest.nest.SBTRunner,
   // casting to the structural type SBTRunner above so that method calls on the result will be invoked reflectively as well
-  private def SBTRunner(partestFingerprint: Fingerprint, eventHandler: EventHandler, loggers: Array[Logger], srcDir: String, testClassLoader: URLClassLoader, javaCmd: File, javacCmd: File, scalacArgs: Array[String]): SBTRunner = {
+  private def SBTRunner(partestFingerprint: Fingerprint, eventHandler: EventHandler, loggers: Array[Logger], srcDir: String, testClassLoader: URLClassLoader, javaCmd: File, javacCmd: File, scalacArgs: Array[String], args: Array[String]): SBTRunner = {
     val runnerClass = Class.forName("scala.tools.partest.nest.SBTRunner")
-    runnerClass.getConstructors()(0).newInstance(partestFingerprint, eventHandler, loggers, srcDir, testClassLoader, javaCmd, javacCmd, scalacArgs).asInstanceOf[SBTRunner]
+    runnerClass.getConstructors()(0).newInstance(partestFingerprint, eventHandler, loggers, srcDir, testClassLoader, javaCmd, javacCmd, scalacArgs, args).asInstanceOf[SBTRunner]
   }
 
   /** A possibly zero-length array of string tags associated with this task. */
