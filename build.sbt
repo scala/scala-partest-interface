@@ -1,10 +1,20 @@
 scalaModuleSettings
 
-version                    := "0.7.0-SNAPSHOT"
+version                    := "0.8.0-SNAPSHOT"
 
-scalaVersion               := "2.11.4"
+crossScalaVersions         := {
+  val java = System.getProperty("java.version")
+  if (java.startsWith("1.6."))
+    Seq("2.11.7")
+  else if (java.startsWith("1.8."))
+    Seq("2.12.0-M3")
+  else
+    sys.error(s"don't know what Scala versions to build on $java")
+}
 
-snapshotScalaBinaryVersion := "2.11.4"
+scalaVersion               := crossScalaVersions.value.head
+
+snapshotScalaBinaryVersion := scalaVersion.value
 
 // dependencies:
 libraryDependencies        += "org.scala-sbt" % "test-interface" % "1.0"
